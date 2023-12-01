@@ -1,0 +1,18 @@
+$ printf "Hello\nWorld\n\n" | python3 nl.py
+1 Hello
+2 World
+3
+
+$ printf "Hello\nWorld\n\n" > test.txt
+$ python3 nl.py test.txt
+1 Hello
+2 World
+3
+
+$ python3 nl.py test.txt test.txt
+1 Hello
+2 World
+3
+4 Hello
+5 World
+6
