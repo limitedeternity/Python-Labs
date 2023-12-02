@@ -1,0 +1,23 @@
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 > test.txt
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 100 > test2.txt
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 | wc
+     20      20     420
+
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 | python3 wc.py
+     20      20     420
+
+$ wc test.txt
+ 20  20 420 test.txt
+
+$ python3 wc.py test.txt
+ 20  20 420 test.txt
+
+$ wc test.txt test2.txt
+  20   20  420 test.txt
+ 100  100 2100 test2.txt
+ 120  120 2520 total
+
+$ python3 wc.py test.txt test2.txt
+  20   20  420 test.txt
+ 100  100 2100 test2.txt
+ 120  120 2520 total
