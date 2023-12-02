@@ -1,0 +1,57 @@
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 | python3 tail.py | python3 nl.py
+1 cUHVxjGtpTQmYvkfMDrm
+2 jTEQduixAezjksebuDzp
+3 ASwsXUIKtSEqZwxYhUvr
+4 PPyWIMRAXRfLiIOlzWye
+5 VpLjVrWGvJbaVlwPlhNa
+6 TANgOhGoUsVINUiySPBq
+7 mFbmefaKVHlKJTDgWmZk
+8 cvzJDEwXacUFtWwibwLS
+9 wtwpdTEPNeIWrckSwWlq
+10 msMGvuuLYscRePcPcFeg
+11 DWEPHLfLhDbmLVzAiRfX
+12 CJwUddcPqGnYRKghobmz
+13 npVCNMnWGiHuAVqBYPQM
+14 HHqmIhdgtoAMQScydvId
+15 eHfLfJkINdPbfWxxzJMB
+16 jkdqcdhnUTtaMjFxZkjx
+17 emtjYkaeHRlaHMxXkqlG
+
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 > test.txt
+$ python3 tail.py test.txt | python3 nl.py
+1 ANgwVgkAuPFAmvoAZjEG
+2 mqrXgWRWTQpxDXuZIxJH
+3 fGGGTEtzTmCwmImJuSvm
+4 qnnJSSmiIExsKUxnGfhx
+5 GGZDiACKShQXfdJhTNlE
+6 XFqkErWkmalhrJvLMuZA
+7 DIPzwaxYJraglnIzGcpf
+8 jOlXXDRhUOuXsaqzleeC
+9 fVKxdngUqeWafCcJAQWq
+10 PiYHZmxyfnspIWAYMeWg
+
+$ cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-20} | head -n 20 > test2.txt
+$ python3 tail.py test.txt test2.txt | python3 nl.py
+1 ==> test.txt <==
+2 ANgwVgkAuPFAmvoAZjEG
+3 mqrXgWRWTQpxDXuZIxJH
+4 fGGGTEtzTmCwmImJuSvm
+5 qnnJSSmiIExsKUxnGfhx
+6 GGZDiACKShQXfdJhTNlE
+7 XFqkErWkmalhrJvLMuZA
+8 DIPzwaxYJraglnIzGcpf
+9 jOlXXDRhUOuXsaqzleeC
+10 fVKxdngUqeWafCcJAQWq
+11 PiYHZmxyfnspIWAYMeWg
+12
+13 ==> test2.txt <==
+14 VFOiGCKhZUXUeGJqCjar
+15 LwcMNXnRxCLlHlvHPbVQ
+16 eWyEisknFoRNwnOdsoBQ
+17 wnbobgtdwUZiiZAGfvnm
+18 DzZCwlYLdzrMhwsfOtBA
+19 RerZVVUUfDPzOeUMAOBu
+20 hWWwZtFYIFdIvaqNmByv
+21 urIKabAunVYAigKPnfCg
+22 TcHgvWGQNVUaLOSVlvro
+23 JpeWDJeyRBBxRrZLyuBT
