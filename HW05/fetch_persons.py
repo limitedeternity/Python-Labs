@@ -35,13 +35,13 @@ def unique_hash(func):
             file_path, file_hash = file_digest(await func(*args, **kwargs))
 
             if file_hash in unique_hash.hashes:
-                print(f"Rejected: {file_path} ({file_hash})")
+                print(f"Rejected: {file_path.name} ({file_hash})")
                 await asyncio.sleep(1)
                 continue
 
             unique_hash.hashes.add(file_hash)
 
-            print(f"Passed: {file_path} ({file_hash})")
+            print(f"Passed: {file_path.name} ({file_hash})")
             return file_path
 
     return wrapper
