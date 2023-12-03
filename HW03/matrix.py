@@ -1,5 +1,5 @@
 from dataclasses import astuple, dataclass
-from itertools import groupby, product
+from itertools import groupby
 from pprint import pformat as pf
 import operator
 from pathlib import Path
@@ -103,28 +103,37 @@ if __name__ == "__main__":
         m_add = m1 + m2
         numpy_add = (mdata1 + mdata2).tolist()
 
+        add_eq = m_add == Matrix(numpy_add)
+        assert add_eq
+
         f.write(f"Custom:\n{m_add}")
         f.write("\n")
         f.write(f"NumPy:\n{pf(numpy_add)}")
         f.write("\n")
-        f.write(f"Equal: {m_add.matrix == numpy_add}")
+        f.write(f"Equal: {add_eq}")
 
     with (artifacts_dir / "matrix_mul.txt").open(mode="w", encoding="utf-8") as f:
         m_mul = m1 * m2
         numpy_mul = (mdata1 * mdata2).tolist()
 
+        mul_eq = m_mul == Matrix(numpy_mul)
+        assert mul_eq
+
         f.write(f"Custom:\n{m_mul}")
         f.write("\n")
         f.write(f"NumPy:\n{pf(numpy_mul)}")
         f.write("\n")
-        f.write(f"Equal: {m_mul.matrix == numpy_mul}")
+        f.write(f"Equal: {mul_eq}")
 
     with (artifacts_dir / "matrix_dot.txt").open(mode="w", encoding="utf-8") as f:
         m_matmul = m1 @ m2
         numpy_matmul = (mdata1 @ mdata2).tolist()
 
+        matmul_eq = m_matmul == Matrix(numpy_matmul)
+        assert matmul_eq
+
         f.write(f"Custom:\n{m_matmul}")
         f.write("\n")
         f.write(f"NumPy:\n{pf(numpy_matmul)}")
         f.write("\n")
-        f.write(f"Equal: {m_matmul.matrix == numpy_matmul}")
+        f.write(f"Equal: {matmul_eq}")
