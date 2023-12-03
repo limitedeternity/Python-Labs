@@ -1,3 +1,4 @@
+import itertools
 from numbers import Number
 from os import PathLike
 from pathlib import Path
@@ -10,6 +11,9 @@ from numpy.lib.mixins import NDArrayOperatorsMixin
 class GetterSetterMixin:
     def __init__(self, value):
         self._value = np.asarray(value)
+
+        if hasattr(self, "__post_init__"):
+            self.__post_init__()
 
     @property
     def value(self):
@@ -35,14 +39,17 @@ class FileMixin:
 
 
 class ArrayLike(GetterSetterMixin, StrMixin, FileMixin, NDArrayOperatorsMixin):
-    _HANDLED_TYPES = (np.ndarray, list, Number)
+    _HANDLED_TYPES = ()
     _VALUE_ATTR = "value"
+
+    def __post_init__(self):
+        self._HANDLED_TYPES = (np.ndarray, list, Number, ArrayLike)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         out = kwargs.get("out", ())
 
-        for x in inputs + out:
-            if not isinstance(x, self._HANDLED_TYPES + (ArrayLike,)):
+        for x in itertools.chain(inputs, out):
+            if not isinstance(x, self._HANDLED_TYPES):
                 return NotImplemented
 
         inputs = tuple(ArrayLike._unwrap_arraylike(inputs))
