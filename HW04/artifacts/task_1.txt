@@ -1,0 +1,3 @@
+Execution time with synchronous execution: 128200 ns
+Execution time with threading: 11437400 ns
+Execution time with multiprocessing: 1583832600 ns
