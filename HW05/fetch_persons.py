@@ -6,18 +6,9 @@ from pathlib import Path
 import platform
 from typing import Tuple
 
-import aiohttp
 import aiofiles
-
-
-def static_vars(**kwargs):
-    def decorate(func):
-        for k, v in kwargs.items():
-            setattr(func, k, v)
-
-        return func
-
-    return decorate
+import aiohttp
+from aiolimiter import AsyncLimiter
 
 
 def aiofy(*, executor=None):
@@ -57,25 +48,40 @@ async def file_digest(file_path: Path) -> Tuple[Path, str]:
     return (file_path, await hasher.hexdigest())
 
 
-@static_vars(hashes=set())
-def unique_hash(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        while True:
-            file_path, file_hash = await file_digest(await func(*args, **kwargs))
+class UniqueHash:
+    def __init__(self):
+        self.hashes = set()
 
-            if file_hash in unique_hash.hashes:
-                print(f"Rejected: {file_path.name} ({file_hash})")
-                await asyncio.sleep(1)
+    def __call__(self, func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            while True:
+                file_path, file_hash = await file_digest(await func(*args, **kwargs))
 
-                continue
+                if file_hash in self.hashes:
+                    print(f"Rejected: {file_path.name} ({file_hash})")
 
-            unique_hash.hashes.add(file_hash)
-            print(f"Passed: {file_path.name} ({file_hash})")
+                    continue
 
-            return file_path
+                self.hashes.add(file_hash)
+                print(f"Passed: {file_path.name} ({file_hash})")
 
-    return wrapper
+                return file_path
+
+        return wrapper
+
+
+class RateLimiter:
+    def __init__(self, *, calls_limit: int, period: int):
+        self.limiter = AsyncLimiter(calls_limit, period)
+
+    def __call__(self, func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            async with self.limiter:
+                return await func(*args, **kwargs)
+
+        return wrapper
 
 
 async def download_file(url: str, file_path: Path) -> Path:
@@ -88,13 +94,16 @@ async def download_file(url: str, file_path: Path) -> Path:
     return file_path
 
 
-async def fetch_persons(n: int, dest: Path) -> Tuple[Path, ...]:
+async def fetch_persons(n: int, /, dest: Path) -> Tuple[Path, ...]:
     tasks = [None] * n
     dest.mkdir(parents=True, exist_ok=True)
 
+    rate_limiter = RateLimiter(calls_limit=5, period=1)
+    unique_hash = UniqueHash()
+
     for i in range(n):
         tasks[i] = asyncio.create_task(
-            unique_hash(download_file)(
+            unique_hash(rate_limiter(download_file))(
                 "https://thispersondoesnotexist.com/",
                 dest / f"person_{i + 1}.jpeg",
             )
@@ -103,7 +112,7 @@ async def fetch_persons(n: int, dest: Path) -> Tuple[Path, ...]:
     return await asyncio.gather(*tasks)
 
 
-def nat_type(x, /) -> int:
+def nat_type(x: str, /) -> int:
     x = int(x)
 
     if x < 1:
