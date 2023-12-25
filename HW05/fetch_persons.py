@@ -1,21 +1,13 @@
 import argparse
 import asyncio
+from functools import partial, wraps
 import hashlib
 from pathlib import Path
 import platform
 from typing import Tuple
 
 import aiohttp
-
-
-def file_digest(file_path: Path) -> (Path, str):
-    h = hashlib.sha256()
-
-    with file_path.open(mode="rb") as f:
-        while chunk := f.read(1024):
-            h.update(chunk)
-
-    return (file_path, h.hexdigest())
+import aiofiles
 
 
 def static_vars(**kwargs):
@@ -28,20 +20,59 @@ def static_vars(**kwargs):
     return decorate
 
 
+def aiofy(*, executor=None):
+    def decorate(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            loop = asyncio.get_running_loop()
+            func_binder = partial(func, *args, **kwargs)
+
+            return await loop.run_in_executor(executor, func_binder)
+
+        return wrapper
+
+    return decorate
+
+
+def to_async_hasher(hasher):
+    return type(
+        "AsyncHasher",
+        (),
+        {
+            "__module__": __name__,
+            "update": aiofy()(hasher.update),
+            "digest": aiofy()(hasher.digest),
+            "hexdigest": aiofy()(hasher.hexdigest),
+        },
+    )
+
+
+async def file_digest(file_path: Path) -> Tuple[Path, str]:
+    hasher = to_async_hasher(hashlib.sha256())
+
+    async with aiofiles.open(file_path, mode="rb") as f:
+        while chunk := await f.read(1024):
+            await hasher.update(chunk)
+
+    return (file_path, await hasher.hexdigest())
+
+
 @static_vars(hashes=set())
 def unique_hash(func):
+    @wraps(func)
     async def wrapper(*args, **kwargs):
         while True:
-            file_path, file_hash = file_digest(await func(*args, **kwargs))
+            file_path, file_hash = await file_digest(await func(*args, **kwargs))
 
             if file_hash in unique_hash.hashes:
                 print(f"Rejected: {file_path.name} ({file_hash})")
                 await asyncio.sleep(1)
+
                 continue
 
             unique_hash.hashes.add(file_hash)
-
             print(f"Passed: {file_path.name} ({file_hash})")
+
             return file_path
 
     return wrapper
@@ -50,14 +81,14 @@ def unique_hash(func):
 async def download_file(url: str, file_path: Path) -> Path:
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
-            with file_path.open(mode="wb") as f:
+            async with aiofiles.open(file_path, mode="wb") as f:
                 while chunk := await response.content.read(1024):
-                    f.write(chunk)
+                    await f.write(chunk)
 
     return file_path
 
 
-async def fetch_persons(n: int, dest: Path) -> Tuple[Path]:
+async def fetch_persons(n: int, dest: Path) -> Tuple[Path, ...]:
     tasks = [None] * n
     dest.mkdir(parents=True, exist_ok=True)
 
@@ -72,8 +103,9 @@ async def fetch_persons(n: int, dest: Path) -> Tuple[Path]:
     return await asyncio.gather(*tasks)
 
 
-def nat_type(x) -> int:
+def nat_type(x, /) -> int:
     x = int(x)
+
     if x < 1:
         raise argparse.ArgumentTypeError("Natural number is expected")
 

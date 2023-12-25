@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 numpy = "==1.24.4"
 aiohttp = "==3.9.1"
+aiofiles = "==23.2.1"
 
 [dev-packages]
 python-lsp-server = {extras = ["pylint"], version = "==1.9.0"}
